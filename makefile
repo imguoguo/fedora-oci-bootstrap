@@ -34,7 +34,14 @@ ifeq ($(strip $(rootfs_archive)),)
 	@echo "rootfs_archive is empty, image will not be built"
 	exit 1
 endif
-	$(container_toolkit) import --change 'CMD ["/bin/bash"]'  --arch=$(arch) $(rootfs_archive) $(oci_reference)
+ifeq ($(container_toolkit), podman)
+	$(container_toolkit) import --change 'CMD ["/bin/bash"]' --arch=$(arch) $(rootfs_archive) $(oci_reference)
+else ifeq ($(container_toolkit), docker)
+	$(container_toolkit) import --change 'CMD ["/bin/bash"]' --platform=$(arch) $(rootfs_archive) $(oci_reference)
+else
+	@echo "Unknown container toolkit: $(container_toolkit)"
+	exit 1
+endif
 
 dnf-based-oci-image:
 	$(MAKE) dnf-container-bootstrap
